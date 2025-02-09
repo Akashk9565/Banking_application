@@ -1,5 +1,8 @@
 package com.bankApp.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 
 import com.bankApp.dto.AccountDto;
@@ -12,7 +15,7 @@ import com.bankApp.service.AccountService;
 public class AccountserviceImpl implements AccountService {
 
 	private AccountRepository accountRepository;
-	
+
 	public AccountserviceImpl(AccountRepository accountRepository) {
 		super();
 		this.accountRepository = accountRepository;
@@ -27,14 +30,16 @@ public class AccountserviceImpl implements AccountService {
 
 	@Override
 	public AccountDto getAccountByid(Long id) {
-		Account account = accountRepository.findById(id).orElseThrow(() -> new RuntimeException("Account does not exist"));
+		Account account = accountRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Account does not exist"));
 		return AccountMapper.mapToAccountDto(account);
 	}
 
 	@Override
 	public AccountDto deposit(Long id, double amount) {
-		Account account = accountRepository.findById(id).orElseThrow(() -> new RuntimeException("Account does not exist"));
-		double totalBalance = account.getBalance()+amount;
+		Account account = accountRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Account does not exist"));
+		double totalBalance = account.getBalance() + amount;
 		account.setBalance(totalBalance);
 		Account savedAccount = accountRepository.save(account);
 		return AccountMapper.mapToAccountDto(savedAccount);
@@ -42,14 +47,28 @@ public class AccountserviceImpl implements AccountService {
 
 	@Override
 	public AccountDto withdraw(Long id, double amount) {
-		Account account = accountRepository.findById(id).orElseThrow(() -> new RuntimeException("Account does not exist"));
-		if(account.getBalance() < amount) {
+		Account account = accountRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Account does not exist"));
+		if (account.getBalance() < amount) {
 			throw new RuntimeException("Incufficient Balance");
 		}
-		double totalBalance = account.getBalance()-amount;
+		double totalBalance = account.getBalance() - amount;
 		account.setBalance(totalBalance);
 		Account savedAccount = accountRepository.save(account);
 		return AccountMapper.mapToAccountDto(savedAccount);
+	}
+
+	@Override
+	public List<AccountDto> getAllAccounts() {
+		return accountRepository.findAll().stream().map((account) -> AccountMapper.mapToAccountDto(account))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public void deleteAccount(Long id) {
+		Account account = accountRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Account does not exist"));
+		accountRepository.delete(account);
 	}
 
 }
